@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Signup | SignalDesk{% endblock %}
+
+{% block public_content %}
+<section class="auth-card-grid">
+    <div class="auth-brand-panel">
+        <span class="eyebrow-pill">Start Free</span>
+        <h1>Launch a private AI CRM workspace.</h1>
+        <p>Create your account to manage leads, reminders, outreach history, and reporting in one place.</p>
+    </div>
+    <div class="auth-form-panel">
+        <h2>Create account</h2>
+        <form method="post" class="stack-gap">
+            {% csrf_token %}
+            {% for field in form %}
+                <div>
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <div class="form-hint">{{ field.help_text|safe }}</div>
+                    {% endif %}
+                    {% if field.errors %}
+                        <div class="field-error">{{ field.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary w-100">Create Workspace</button>
+        </form>
+        <p class="auth-helper">Already have an account? <a href="{% url 'login' %}">Sign in</a>.</p>
+    </div>
+</section>
+{% endblock %}

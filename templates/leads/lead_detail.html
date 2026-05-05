@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lead.name }} | SignalDesk{% endblock %}
+{% block page_title %}Lead Profile{% endblock %}
+
+{% block app_content %}
+<section class="lead-header-card">
+    <div>
+        <span class="eyebrow-pill">Lead Profile</span>
+        <h2>{{ lead.name }}</h2>
+        <p>{{ lead.company }} • {{ lead.industry }}{% if lead.job_title %} • {{ lead.job_title }}{% endif %}</p>
+        <div class="tag-row">
+            <span class="stage-chip">{{ lead.get_stage_display }}</span>
+            <span class="stage-chip">{{ lead.get_priority_display }}</span>
+            {% for tag in lead.tags.all %}
+                <span class="tag-chip">{{ tag.name }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="button-stack">
+        <a href="{% url 'lead_edit' lead.pk %}" class="btn btn-outline-light">Edit Lead</a>
+        <form method="post" action="{% url 'score_lead' lead.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'lead_detail' lead.pk %}">
+            <button type="submit" class="btn btn-light">Score with AI</button>
+        </form>
+        <form method="post" action="{% url 'generate_email' lead.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'lead_detail' lead.pk %}">
+            <button type="submit" class="btn btn-warning">Generate Outreach</button>
+        </form>
+    </div>
+</section>
+
+<section class="content-grid">
+    <div class="card-surface">
+        <div class="section-heading">
+            <div>
+                <p class="section-label">Lead Snapshot</p>
+                <h3>Account details</h3>
+            </div>
+        </div>
+        <div class="detail-grid">
+            <div><span>Email</span><strong>{{ lead.email }}</strong></div>
+            <div><span>Phone</span><strong>{{ lead.phone|default:"-" }}</strong></div>
+            <div><span>Website</span><strong>{% if lead.website %}<a href="{{ lead.website }}" target="_blank">{{ lead.website }}</a>{% else %}-{% endif %}</strong></div>
+            <div><span>Source</span><strong>{{ lead.source|default:"-" }}</strong></div>
+            <div><span>City</span><strong>{{ lead.city|default:"-" }}</strong></div>
+            <div><span>Next follow-up</span><strong>{{ lead.next_follow_up_at|date:"M d, Y H:i"|default:"-" }}</strong></div>
+        </div>
+        <div class="divider"></div>
+        <form method="post" action="{% url 'lead_stage_update' lead.pk %}" class="inline-form">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'lead_detail' lead.pk %}">
+            <select name="stage" class="form-select">
+                {% for value, label in stage_choices %}
+                    <option value="{{ value }}" {% if lead.stage == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-outline-dark">Update Stage</button>
+        </form>
+    </div>
+
+    <div class="card-surface">
+        <div class="section-heading">
+            <div>
+                <p class="section-label">AI Context</p>
+                <h3>Score and reasoning</h3>
+            </div>
+        </div>
+        <div class="score-display">{{ lead.score|default:"-" }}</div>
+        <p class="muted-copy">{{ lead.reason|default:"No AI reasoning captured yet." }}</p>
+        <p class="meta-copy">Last scored: {{ lead.last_scored_at|date:"M d, Y H:i"|default:"Never" }}</p>
+        <div class="detail-note">
+            <strong>Summary</strong>
+            <p>{{ lead.notes_summary|default:"No summary added yet." }}</p>
+        </div>
+    </div>
+</section>
+
+<section class="content-grid">
+    <div class="card-surface">
+        <div class="section-heading">
+            <div>
+                <p class="section-label">Notes</p>
+                <h3>Context timeline</h3>
+            </div>
+        </div>
+        <form method="post" action="{% url 'add_lead_note' lead.pk %}" class="stack-gap-sm">
+            {% csrf_token %}
+            {{ note_form.content }}
+            <button type="submit" class="btn btn-primary">Add Note</button>
+        </form>
+        <div class="stack-gap mt-4">
+            {% for note in lead.notes.all %}
+                <div class="detail-note">
+                    <strong>{{ note.created_at|date:"M d, Y H:i" }}</strong>
+                    <p>{{ note.content }}</p>
+                </div>
+            {% empty %}
+                <p class="empty-copy">No notes added yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card-surface">
+        <div class="section-heading">
+            <div>
+                <p class="section-label">Tasks</p>
+                <h3>Follow-up actions</h3>
+            </div>
+        </div>
+        <form method="post" action="{% url 'add_lead_task' lead.pk %}" class="stack-gap-sm">
+            {% csrf_token %}
+            {% for field in task_form %}
+                <div>
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Create Task</button>
+        </form>
+        <div class="stack-gap mt-4">
+            {% for task in open_tasks %}
+                <div class="list-row">
+                    <div>
+                        <strong>{{ task.title }}</strong>
+                        <p>{% if task.due_date %}Due {{ task.due_date }}{% else %}No due date{% endif %}</p>
+                    </div>
+                    <form method="post" action="{% url 'toggle_task' task.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{% url 'lead_detail' lead.pk %}">
+                        <button class="btn btn-outline-secondary btn-sm" type="submit">Complete</button>
+                    </form>
+                </div>
+            {% empty %}
+                <p class="empty-copy">No open tasks for this lead.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="content-grid">
+    <div class="card-surface">
+        <div class="section-heading">
+            <div>
+                <p class="section-label">Outreach</p>
+                <h3>Email history</h3>
+            </div>
+        </div>
+        <div class="stack-gap">
+            {% for email in email_history %}
+                <div class="detail-note">
+                    <strong>{{ email.subject|default:"Generated outreach" }}</strong>
+                    <p class="meta-copy">{{ email.created_at|date:"M d, Y H:i" }}</p>
+                    <pre class="email-body">{{ email.body }}</pre>
+                </div>
+            {% empty %}
+                <p class="empty-copy">No outreach history yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card-surface">
+        <div class="section-heading">
+            <div>
+                <p class="section-label">Activity</p>
+                <h3>CRM timeline</h3>
+            </div>
+        </div>
+        <div class="stack-gap">
+            {% for activity in activities %}
+                <div class="timeline-row">
+                    <span class="timeline-dot"></span>
+                    <div>
+                        <strong>{{ activity.summary }}</strong>
+                        <p>{{ activity.created_at|date:"M d, Y H:i" }}</p>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="empty-copy">No activity yet.</p>
+            {% endfor %}
+        </div>
+        <div class="divider"></div>
+        <form method="post" action="{% url 'lead_delete' lead.pk %}" data-confirm="Delete this lead permanently?">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger">Delete Lead</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

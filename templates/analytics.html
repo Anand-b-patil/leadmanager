@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics | SignalDesk{% endblock %}
+{% block page_title %}Analytics{% endblock %}
+
+{% block app_content %}
+<section class="kpi-grid">
+    {% for item in analytics_kpis %}
+        <article class="kpi-card tone-primary">
+            <span>{{ item.label }}</span>
+            <strong>{{ item.value }}</strong>
+        </article>
+    {% endfor %}
+</section>
+
+<section class="content-grid">
+    <div class="card-surface">
+        <div class="section-heading"><h3>Leads by stage</h3></div>
+        <div class="stack-gap">
+            {% for row in stage_rows %}
+                <div>
+                    <div class="bar-meta">
+                        <span>{{ row.label }}</span>
+                        <strong>{{ row.count }}</strong>
+                    </div>
+                    <div class="bar-track"><div class="bar-fill" style="width: {{ row.percent }}%;"></div></div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="card-surface">
+        <div class="section-heading"><h3>Top industries</h3></div>
+        <div class="stack-gap">
+            {% for row in industry_rows %}
+                <div class="list-row">
+                    <strong>{{ row.industry }}</strong>
+                    <span>{{ row.total }}</span>
+                </div>
+            {% empty %}
+                <p class="empty-copy">No industry data yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="content-grid">
+    <div class="card-surface">
+        <div class="section-heading"><h3>Score distribution</h3></div>
+        <div class="stack-gap">
+            {% for label, total in score_bands %}
+                <div class="list-row">
+                    <strong>{{ label }}</strong>
+                    <span>{{ total }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="card-surface">
+        <div class="section-heading"><h3>Activity mix</h3></div>
+        <div class="stack-gap">
+            {% for row in activity_rows %}
+                <div class="list-row">
+                    <strong>{{ row.activity_type }}</strong>
+                    <span>{{ row.total }}</span>
+                </div>
+            {% empty %}
+                <p class="empty-copy">No activity logged yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

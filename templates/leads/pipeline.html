@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Pipeline | SignalDesk{% endblock %}
+{% block page_title %}Pipeline{% endblock %}
+
+{% block app_content %}
+<section class="pipeline-grid">
+    {% for column in pipeline_columns %}
+        <article class="pipeline-column">
+            <div class="pipeline-head">
+                <h3>{{ column.label }}</h3>
+                <span>{{ column.count }}</span>
+            </div>
+            <div class="stack-gap">
+                {% for lead in column.leads %}
+                    <a href="{% url 'lead_detail' lead.pk %}" class="pipeline-card">
+                        <strong>{{ lead.name }}</strong>
+                        <p>{{ lead.company }}</p>
+                        <div class="pipeline-meta">
+                            <span>{{ lead.score|default:"-" }}</span>
+                            <span>{{ lead.get_priority_display }}</span>
+                        </div>
+                    </a>
+                {% empty %}
+                    <p class="empty-copy">No leads in this stage.</p>
+                {% endfor %}
+            </div>
+        </article>
+    {% endfor %}
+</section>
+{% endblock %}

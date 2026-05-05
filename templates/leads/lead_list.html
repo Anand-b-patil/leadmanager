@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Leads | SignalDesk{% endblock %}
+{% block page_title %}Leads{% endblock %}
+
+{% block app_content %}
+<section class="card-surface mb-4">
+    <form method="get" class="filter-grid">
+        <div>
+            <label class="form-label" for="q">Search</label>
+            <input id="q" type="text" name="q" value="{{ filters.q }}" class="form-control" placeholder="Name, company, email, notes">
+        </div>
+        <div>
+            <label class="form-label" for="stage">Stage</label>
+            <select id="stage" name="stage" class="form-select">
+                <option value="">All stages</option>
+                {% for value, label in stage_choices %}
+                    <option value="{{ value }}" {% if filters.stage == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="form-label" for="priority">Priority</label>
+            <select id="priority" name="priority" class="form-select">
+                <option value="">All priorities</option>
+                {% for value, label in priority_choices %}
+                    <option value="{{ value }}" {% if filters.priority == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="form-label" for="tag">Tag</label>
+            <select id="tag" name="tag" class="form-select">
+                <option value="">All tags</option>
+                {% for tag in tag_options %}
+                    <option value="{{ tag.name }}" {% if filters.tag == tag.name %}selected{% endif %}>{{ tag.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="form-label" for="sort">Sort</label>
+            <select id="sort" name="sort" class="form-select">
+                {% for value, label in sort_options %}
+                    <option value="{{ value }}" {% if filters.sort|default:'-updated_at' == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="form-label" for="min_score">Min score</label>
+            <input id="min_score" type="number" name="min_score" value="{{ filters.min_score }}" class="form-control">
+        </div>
+        <div>
+            <label class="form-label" for="max_score">Max score</label>
+            <input id="max_score" type="number" name="max_score" value="{{ filters.max_score }}" class="form-control">
+        </div>
+        <div>
+            <label class="form-label" for="created_after">Created after</label>
+            <input id="created_after" type="date" name="created_after" value="{{ filters.created_after }}" class="form-control">
+        </div>
+        <div>
+            <label class="form-label" for="created_before">Created before</label>
+            <input id="created_before" type="date" name="created_before" value="{{ filters.created_before }}" class="form-control">
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Apply Filters</button>
+            <a href="{% url 'lead_list' %}" class="btn btn-outline-secondary">Reset</a>
+            <a href="{% url 'export_leads' %}" class="btn btn-outline-dark">Export CSV</a>
+        </div>
+    </form>
+</section>
+
+<section class="card-surface">
+    <div class="section-heading">
+        <div>
+            <p class="section-label">Lead Index</p>
+            <h3>{{ page_obj.paginator.count }} lead{{ page_obj.paginator.count|pluralize }}</h3>
+        </div>
+        <a href="{% url 'lead_create' %}" class="btn btn-primary">New Lead</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table app-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Lead</th>
+                    <th>Company</th>
+                    <th>Stage</th>
+                    <th>Priority</th>
+                    <th>Score</th>
+                    <th>Follow-up</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lead in leads %}
+                    <tr>
+                        <td>
+                            <a class="table-link" href="{% url 'lead_detail' lead.pk %}">{{ lead.name }}</a>
+                            <div class="table-sub">{{ lead.email }}</div>
+                            <div class="tag-row">
+                                {% for tag in lead.tags.all %}
+                                    <span class="tag-chip">{{ tag.name }}</span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td>{{ lead.company }}<div class="table-sub">{{ lead.industry }}</div></td>
+                        <td><span class="stage-chip">{{ lead.get_stage_display }}</span></td>
+                        <td>{{ lead.get_priority_display }}</td>
+                        <td>{{ lead.score|default:"-" }}</td>
+                        <td>
+                            {% if lead.next_follow_up_at %}
+                                {{ lead.next_follow_up_at|date:"M d, Y H:i" }}
+                            {% else %}
+                                <span class="text-body-secondary">Not scheduled</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end"><a href="{% url 'lead_edit' lead.pk %}">Edit</a></td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="empty-copy">No leads matched the current filters.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if is_paginated %}
+        <div class="pagination-row">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline-secondary btn-sm">Previous</a>
+            {% endif %}
+            <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline-secondary btn-sm">Next</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

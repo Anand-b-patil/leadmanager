@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} | SignalDesk{% endblock %}
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block app_content %}
+<section class="card-surface">
+    <form method="post" class="stack-gap">
+        {% csrf_token %}
+        <div class="form-grid">
+            {% for field in form %}
+                <div class="{% if field.name == 'notes_summary' %}span-2{% endif %}">
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <div class="form-hint">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% if field.errors %}
+                        <div class="field-error">{{ field.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        <div class="button-row">
+            <button type="submit" class="btn btn-primary">{{ submit_label }}</button>
+            <a href="{% url 'lead_list' %}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

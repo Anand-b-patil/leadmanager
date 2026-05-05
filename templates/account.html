@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Account | SignalDesk{% endblock %}
+{% block page_title %}Account{% endblock %}
+
+{% block app_content %}
+<section class="content-grid">
+    <div class="card-surface">
+        <div class="section-heading">
+            <div>
+                <p class="section-label">Profile</p>
+                <h3>Workspace identity</h3>
+            </div>
+        </div>
+        <form method="post" class="stack-gap">
+            {% csrf_token %}
+            {% for field in form %}
+                <div>
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <div class="field-error">{{ field.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Save Account</button>
+        </form>
+    </div>
+
+    <div class="card-surface">
+        <div class="section-heading">
+            <div>
+                <p class="section-label">Usage</p>
+                <h3>Workspace stats</h3>
+            </div>
+        </div>
+        <div class="stack-gap">
+            {% for stat in account_stats %}
+                <div class="list-row">
+                    <strong>{{ stat.label }}</strong>
+                    <span>{{ stat.value }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

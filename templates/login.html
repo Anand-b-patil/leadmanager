@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Login | SignalDesk{% endblock %}
+
+{% block public_content %}
+<section class="auth-card-grid">
+    <div class="auth-brand-panel">
+        <span class="eyebrow-pill">Secure Workspace</span>
+        <h1>Welcome back to your pipeline.</h1>
+        <p>Sign in to review follow-ups, stage movement, AI output, and the health of your revenue funnel.</p>
+    </div>
+    <div class="auth-form-panel">
+        <h2>Login</h2>
+        <form method="post" class="stack-gap">
+            {% csrf_token %}
+            {% for field in form %}
+                <div>
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <div class="field-error">{{ field.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors|join:", " }}</div>
+            {% endif %}
+            <button type="submit" class="btn btn-primary w-100">Sign In</button>
+        </form>
+        <p class="auth-helper">No workspace yet? <a href="{% url 'signup' %}">Create an account</a>.</p>
+    </div>
+</section>
+{% endblock %}

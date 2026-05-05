@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Tasks | SignalDesk{% endblock %}
+{% block page_title %}Tasks{% endblock %}
+
+{% block app_content %}
+<section class="content-grid">
+    <div class="card-surface">
+        <div class="section-heading">
+            <div>
+                <p class="section-label">Task Queue</p>
+                <h3>Follow-up management</h3>
+            </div>
+        </div>
+        <form method="get" class="filter-grid mb-4">
+            <div>
+                <label class="form-label">Search</label>
+                <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Task or lead">
+            </div>
+            <div>
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="open" {% if status == 'open' %}selected{% endif %}>Open</option>
+                    <option value="completed" {% if status == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="overdue" {% if status == 'overdue' %}selected{% endif %}>Overdue</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Priority</label>
+                <select name="priority" class="form-select">
+                    <option value="">All</option>
+                    {% for value, label in priority_choices %}
+                        <option value="{{ value }}" {% if priority == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary">Apply</button>
+            </div>
+        </form>
+        <div class="stack-gap">
+            {% for task in tasks %}
+                <div class="list-row">
+                    <div>
+                        <strong>{{ task.title }}</strong>
+                        <p>{{ task.lead.name }}{% if task.due_date %} • due {{ task.due_date }}{% endif %}</p>
+                    </div>
+                    <form method="post" action="{% url 'toggle_task' task.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{% url 'tasks' %}">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">
+                            {% if task.is_completed %}Reopen{% else %}Complete{% endif %}
+                        </button>
+                    </form>
+                </div>
+            {% empty %}
+                <p class="empty-copy">No tasks matched this view.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card-surface">
+        <div class="section-heading">
+            <div>
+                <p class="section-label">Quick Add</p>
+                <h3>Create a reminder</h3>
+            </div>
+        </div>
+        <form method="post" action="{% url 'task_create' %}" class="stack-gap-sm">
+            {% csrf_token %}
+            <div>
+                <label class="form-label" for="lead_id">Lead</label>
+                <select id="lead_id" name="lead_id" class="form-select">
+                    {% for lead in lead_options %}
+                        <option value="{{ lead.pk }}">{{ lead.name }} • {{ lead.company }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% for field in task_form %}
+                <div>
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                </div>
+            {% endfor %}
+            <input type="hidden" name="next" value="{% url 'tasks' %}">
+            <button type="submit" class="btn btn-primary">Add Task</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

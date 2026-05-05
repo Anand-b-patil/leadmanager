@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | SignalDesk{% endblock %}
+{% block page_title %}Overview{% endblock %}
+
+{% block app_content %}
+<section class="hero-panel-app">
+    <div>
+        <span class="eyebrow-pill">Revenue Snapshot</span>
+        <h2>Keep the team aligned on priority leads, follow-ups, and AI-assisted next steps.</h2>
+    </div>
+    <div class="hero-metric">
+        <span>Average Lead Score</span>
+        <strong>{{ average_score }}</strong>
+    </div>
+</section>
+
+<section class="kpi-grid">
+    {% for item in kpis %}
+        <article class="kpi-card tone-{{ item.tone }}">
+            <span>{{ item.label }}</span>
+            <strong>{{ item.value }}</strong>
+        </article>
+    {% endfor %}
+</section>
+
+<section class="content-grid">
+    <div class="card-surface">
+        <div class="section-heading">
+            <div>
+                <p class="section-label">Pipeline Mix</p>
+                <h3>Stage distribution</h3>
+            </div>
+            <a href="{% url 'pipeline' %}">Open pipeline</a>
+        </div>
+        <div class="stack-gap">
+            {% for row in stage_rows %}
+                <div>
+                    <div class="bar-meta">
+                        <span>{{ row.label }}</span>
+                        <strong>{{ row.count }}</strong>
+                    </div>
+                    <div class="bar-track"><div class="bar-fill" style="width: {{ row.percent }}%;"></div></div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card-surface">
+        <div class="section-heading">
+            <div>
+                <p class="section-label">Upcoming Work</p>
+                <h3>Follow-up queue</h3>
+            </div>
+            <a href="{% url 'tasks' %}">View tasks</a>
+        </div>
+        <div class="stack-gap">
+            {% for task in upcoming_tasks %}
+                <div class="list-row">
+                    <div>
+                        <strong>{{ task.title }}</strong>
+                        <p>{{ task.lead.name }}{% if task.due_date %} • due {{ task.due_date }}{% endif %}</p>
+                    </div>
+                    <span class="stage-chip">{{ task.get_priority_display }}</span>
+                </div>
+            {% empty %}
+                <p class="empty-copy">No open tasks yet. Add follow-up actions from a lead profile or the tasks page.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="content-grid">
+    <div class="card-surface">
+        <div class="section-heading">
+            <div>
+                <p class="section-label">Recent Leads</p>
+                <h3>Latest accounts added</h3>
+            </div>
+            <a href="{% url 'lead_list' %}">See all leads</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table app-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Company</th>
+                        <th>Stage</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lead in recent_leads %}
+                        <tr>
+                            <td><a href="{% url 'lead_detail' lead.pk %}">{{ lead.name }}</a></td>
+                            <td>{{ lead.company }}</td>
+                            <td><span class="stage-chip">{{ lead.get_stage_display }}</span></td>
+                            <td>{{ lead.score|default:"-" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4" class="empty-copy">No leads in the workspace yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card-surface">
+        <div class="section-heading">
+            <div>
+                <p class="section-label">Recent Activity</p>
+                <h3>CRM timeline</h3>
+            </div>
+            <a href="{% url 'ai_workspace' %}">AI workspace</a>
+        </div>
+        <div class="stack-gap">
+            {% for activity in recent_activities %}
+                <div class="timeline-row">
+                    <span class="timeline-dot"></span>
+                    <div>
+                        <strong>{{ activity.summary }}</strong>
+                        <p>{{ activity.lead.name }} • {{ activity.created_at|date:"M d, Y H:i" }}</p>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="empty-copy">Activity will appear here as leads move through the workflow.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

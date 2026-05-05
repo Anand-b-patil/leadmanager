@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}SignalDesk CRM{% endblock %}
+
+{% block public_content %}
+<section class="hero-surface">
+    <div class="hero-copy">
+        <span class="eyebrow-pill">Premium AI CRM</span>
+        <h1>Run your lead pipeline like a focused revenue team, not a spreadsheet.</h1>
+        <p>
+            SignalDesk combines lead capture, stage tracking, follow-up reminders, analytics, and Gemini-assisted outreach
+            in one private workspace for each account.
+        </p>
+        <div class="hero-actions">
+            <a href="{% url 'signup' %}" class="btn btn-primary btn-lg">Create Workspace</a>
+            <a href="{% url 'login' %}" class="btn btn-outline-dark btn-lg">Sign In</a>
+        </div>
+    </div>
+    <div class="hero-panel">
+        <div class="metric-card">
+            <span>Qualified Pipeline</span>
+            <strong>42 leads</strong>
+            <small>Auto-scored, staged, and queued for follow-up.</small>
+        </div>
+        <div class="mini-board">
+            <div>
+                <label>New</label>
+                <strong>14</strong>
+            </div>
+            <div>
+                <label>Proposal</label>
+                <strong>9</strong>
+            </div>
+            <div>
+                <label>Won</label>
+                <strong>5</strong>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="marketing-grid">
+    <article class="feature-card">
+        <h2>Operational pipeline</h2>
+        <p>Track stages, priorities, reminders, and notes across every lead without losing context.</p>
+    </article>
+    <article class="feature-card">
+        <h2>Embedded AI actions</h2>
+        <p>Score leads, generate outreach, and keep a visible history of AI-assisted actions on each account.</p>
+    </article>
+    <article class="feature-card">
+        <h2>Decision-ready analytics</h2>
+        <p>Watch stage mix, task load, score distribution, and activity volume in a cleaner reporting surface.</p>
+    </article>
+</section>
+{% endblock %}
