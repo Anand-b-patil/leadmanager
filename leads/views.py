@@ -28,6 +28,21 @@ def log_activity(owner, lead, activity_type, summary, details=""):
     )
 
 
+def ensure_default_task_for_lead(lead):
+    if lead.tasks.exists() or not lead.owner_id:
+        return None
+
+    due_date = lead.next_follow_up_at.date() if lead.next_follow_up_at else timezone.localdate()
+    return LeadTask.objects.create(
+        owner=lead.owner,
+        lead=lead,
+        title="Initial follow-up",
+        due_date=due_date,
+        priority=lead.priority,
+        notes="Auto-created so every lead starts with a follow-up task.",
+    )
+
+
 def sync_tags(lead, tags_input):
     tags = []
     for raw_name in tags_input.split(","):
@@ -236,12 +251,20 @@ class LeadCreateView(LoginRequiredMixin, CreateView):
         form.instance.owner = self.request.user
         response = super().form_valid(form)
         sync_tags(self.object, form.cleaned_data.get("tags_input", ""))
+        task = ensure_default_task_for_lead(self.object)
         log_activity(
             self.request.user,
             self.object,
             LeadActivity.ActivityType.LEAD_CREATED,
             f"Added {self.object.name} to the CRM.",
         )
+        if task:
+            log_activity(
+                self.request.user,
+                self.object,
+                LeadActivity.ActivityType.TASK_ADDED,
+                f"Created task '{task.title}' for {self.object.name}.",
+            )
         messages.success(self.request, "Lead created successfully.")
         return response
 

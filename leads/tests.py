@@ -67,7 +67,11 @@ class CRMViewsTests(TestCase):
         self.assertRedirects(response, reverse("lead_detail", args=[lead.pk]))
         self.assertEqual(lead.owner, self.user)
         self.assertEqual(lead.tags.count(), 2)
+        task = LeadTask.objects.get(lead=lead)
+        self.assertEqual(task.title, "Initial follow-up")
+        self.assertEqual(task.priority, lead.priority)
         self.assertTrue(LeadActivity.objects.filter(lead=lead, activity_type=LeadActivity.ActivityType.LEAD_CREATED).exists())
+        self.assertTrue(LeadActivity.objects.filter(lead=lead, activity_type=LeadActivity.ActivityType.TASK_ADDED).exists())
 
     def test_user_only_sees_owned_leads(self):
         own = self.create_lead(name="Alice Lead", email="alicelead@example.com")
