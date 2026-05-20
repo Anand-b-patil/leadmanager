@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.core.exceptions import ValidationError
 
 from .models import Lead, LeadNote, LeadTask
 
@@ -88,12 +89,28 @@ class LeadForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        self.owner = kwargs.pop("owner", None)
         super().__init__(*args, **kwargs)
         self.fields["score"].required = False
         self.fields["last_contacted_at"].required = False
         self.fields["next_follow_up_at"].required = False
         if self.instance.pk:
             self.fields["tags_input"].initial = ", ".join(self.instance.tags.values_list("name", flat=True))
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip()
+        owner = self.owner or self.instance.owner
+        if not owner:
+            return email
+
+        duplicate_queryset = Lead.objects.filter(owner=owner, email__iexact=email)
+        if self.instance.pk:
+            duplicate_queryset = duplicate_queryset.exclude(pk=self.instance.pk)
+
+        if duplicate_queryset.exists():
+            raise ValidationError("You already have a lead with this email address.")
+
+        return email
 
 
 class LeadNoteForm(forms.ModelForm):

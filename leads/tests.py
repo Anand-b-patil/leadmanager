@@ -73,6 +73,66 @@ class CRMViewsTests(TestCase):
         self.assertTrue(LeadActivity.objects.filter(lead=lead, activity_type=LeadActivity.ActivityType.LEAD_CREATED).exists())
         self.assertTrue(LeadActivity.objects.filter(lead=lead, activity_type=LeadActivity.ActivityType.TASK_ADDED).exists())
 
+    def test_create_lead_with_duplicate_email_shows_form_error(self):
+        self.create_lead(email="ava@example.com")
+
+        response = self.client.post(
+            reverse("lead_create"),
+            {
+                "name": "Ava Stone Duplicate",
+                "email": "ava@example.com",
+                "company": "Northwind Labs",
+                "industry": "SaaS",
+                "job_title": "Head of Growth",
+                "phone": "",
+                "website": "",
+                "city": "",
+                "source": "Referral",
+                "stage": Lead.Stage.NEW,
+                "priority": Lead.Priority.HIGH,
+                "score": "",
+                "notes_summary": "Warm intro from partner.",
+                "last_contacted_at": "",
+                "next_follow_up_at": "",
+                "tags_input": "inbound, strategic",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "You already have a lead with this email address.")
+        self.assertEqual(Lead.objects.filter(owner=self.user, email="ava@example.com").count(), 1)
+
+    def test_update_lead_with_duplicate_email_shows_form_error(self):
+        original = self.create_lead(name="Ava Stone", email="ava@example.com")
+        other = self.create_lead(name="Mia Chen", email="mia@example.com", company="Bluebird", industry="Finance")
+
+        response = self.client.post(
+            reverse("lead_edit", args=[other.pk]),
+            {
+                "name": other.name,
+                "email": original.email,
+                "company": other.company,
+                "industry": other.industry,
+                "job_title": "",
+                "phone": "",
+                "website": "",
+                "city": "",
+                "source": "",
+                "stage": other.stage,
+                "priority": other.priority,
+                "score": "",
+                "notes_summary": "",
+                "last_contacted_at": "",
+                "next_follow_up_at": "",
+                "tags_input": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "You already have a lead with this email address.")
+        other.refresh_from_db()
+        self.assertEqual(other.email, "mia@example.com")
+
     def test_user_only_sees_owned_leads(self):
         own = self.create_lead(name="Alice Lead", email="alicelead@example.com")
         Lead.objects.create(

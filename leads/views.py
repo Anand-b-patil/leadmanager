@@ -241,6 +241,11 @@ class LeadCreateView(LoginRequiredMixin, CreateView):
     form_class = LeadForm
     template_name = "leads/lead_form.html"
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["owner"] = self.request.user
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["page_title"] = "Create Lead"
@@ -279,6 +284,11 @@ class LeadUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_queryset(self):
         return Lead.objects.filter(owner=self.request.user).prefetch_related("tags")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["owner"] = self.request.user
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
